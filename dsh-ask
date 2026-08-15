@@ -1,0 +1,38 @@
+#!/bin/bash
+# ============================================================
+# dsh-ask —— 大肥鱼专属 dsh 调用入口（方案A：AI 直连 dsh）
+# 用法:
+#   dsh-ask "任务描述" [超时秒数]     # 让 dsh 智能体执行一个任务
+#   dsh-ask --list                   # 查看最近会话
+#   dsh-ask --resume <session>       # 恢复指定会话继续对话
+# 说明: 底层调用 dsh --profile headless，任务完成后打印结果退出
+# ============================================================
+
+TASK="$1"
+TIMEOUT="${2:-90}"
+
+if [ -z "$TASK" ]; then
+    echo "用法: dsh-ask \"任务\" [超时秒数]"
+    exit 1
+fi
+
+if [ "$TASK" = "--list" ]; then
+    ls -lt /root/.dsh/storages/sessions/ 2>/dev/null | head -15
+    exit 0
+fi
+
+cd /tmp || exit 1
+echo "[dsh-ask] 任务: $TASK"
+echo "[dsh-ask] 超时: ${TIMEOUT}s，dsh 智能体工作中..."
+echo "----------------------------------------"
+timeout "$TIMEOUT" dsh --profile headless "$TASK" 2>&1
+RC=$?
+echo "----------------------------------------"
+if [ $RC -eq 124 ]; then
+    echo "[dsh-ask] ⚠️ 超时了（${TIMEOUT}s），任务可能还在进行，可加大超时重试"
+elif [ $RC -ne 0 ]; then
+    echo "[dsh-ask] ❌ 执行出错，退出码 $RC"
+else
+    echo "[dsh-ask] ✅ 任务完成"
+fi
+exit $RC
