@@ -66,6 +66,72 @@ dsh --profile tui
 
 ---
 
+---
+
+## 📱 手机 Termux 安装指南（arm64）
+
+> 手机端推荐用 **Termux + proot-distro Ubuntu**（与 PC 完全一致的 Linux 环境，
+> 内置的 pty.node 为 glibc 编译，在 Ubuntu 里免编译直接可用）。
+
+### 方案A：Termux + proot Ubuntu（✅ 推荐，最稳）
+
+```bash
+# 1. Termux 里装 proot-distro 并安装 Ubuntu
+pkg update && pkg install -y proot-distro git curl
+proot-distro install ubuntu
+proot-distro login ubuntu
+
+# 2. 进入 Ubuntu 后，装 Node.js 24（用 nodesource 源，apt 自带的太旧）
+apt update && apt install -y curl
+curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+apt install -y nodejs git
+node -v   # 应显示 v24.x
+
+# 3. 下载并一键部署 dsh
+git clone https://github.com/Xiaopan2009/dsh-arm64-pack.git
+cd dsh-arm64-pack
+bash install.sh sk-你的DeepSeekAPIKey
+
+# 4. 完成！启动 Web UI 后，在 Termux 外浏览器访问：
+#    （Termux 里运行）
+dsh web
+#    手机浏览器打开 http://127.0.0.1:7860 即可（需 Termux 保持前台运行）
+```
+
+### 方案B：Termux 原生环境（⚠️ 实验性）
+
+```bash
+pkg update && pkg install -y nodejs-lts git clang make python
+git clone https://github.com/Xiaopan2009/dsh-arm64-pack.git
+cd dsh-arm64-pack && bash install.sh sk-你的DeepSeekAPIKey
+```
+
+> ⚠️ 注意：内置 `pty.node` 是 **glibc 编译**的，Termux 原生是 **bionic libc**，
+> 若加载失败（`PTY_FAIL`），install.sh 会提示，此时需要重新编译：
+> ```bash
+> cd /data/data/com.termux/files/usr/lib/node_modules/@deepseek-ai/dsh/node_modules/node-pty
+> npm rebuild node-pty
+> ```
+> 若编译仍失败，强烈建议改用 **方案A**（proot Ubuntu）。
+
+### 手机访问 Web UI 小技巧
+
+- `dsh web` 默认只监听 `127.0.0.1`（安全限制，**禁止 0.0.0.0**）
+- 想用电脑浏览器访问手机上的 dsh：Termux 装 `openssh` 做端口转发，
+  或用 `adb forward tcp:7860 tcp:7860`（USB 连接电脑时）
+
+---
+
+---
+
+## 📜 开源协议
+
+- 本仓库（部署脚本、README、配置模板）采用 **[MIT License](LICENSE)** 开源
+- 分发的 **dsh (DeepSeek Harness)** 软件包版权归 **DeepSeek** 所有，遵循其自带许可证
+- 本仓库仅做 arm64 部署分发，不修改 dsh 本体代码
+
+---
+
 ## ⚠️ 注意事项
 
 1. **Node 版本兼容**：内置 pty.node 编译于 **Node v24 (ABI 137)**。
